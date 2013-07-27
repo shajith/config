@@ -3,6 +3,7 @@ package config
 import (
 	"io/ioutil"
 	"launchpad.net/goyaml"
+	"errors"
 )
 
 type Config map[interface{}]interface{}
@@ -19,15 +20,10 @@ func New(path string) Config {
 	return m
 }
 
-func (c Config) Get(path ...interface{}) (val interface{}) {
+func (c Config) Get(path ...interface{}) (val interface{}, err error) {
 	var tmp interface{}
 	tmp = map[interface{}]interface{}(c)
 	for _, key := range path {
-		if tmp == nil {
-			val = nil
-			return
-		}
-
 		switch tmp.(type) {
 		case map[interface{}]interface{}:
 			tmp = tmp.(map[interface{}]interface{})[key.(string)]
@@ -37,15 +33,16 @@ func (c Config) Get(path ...interface{}) (val interface{}) {
 			if idx < len(arr) {
 				tmp = arr[idx]
 			} else {
-				val = nil
-				return
+				return nil, errors.New("Couldn't fetch path")
 			}
 		default:
-			val = nil
-			return
+			return nil, errors.New("Couldn't fetch path")
 		}
 
 	}
-	val = tmp
-	return
+	if(tmp != nil) {
+		return tmp, nil
+	} else {
+		return nil, errors.New("Couldn't fetch path")
+	}
 }
